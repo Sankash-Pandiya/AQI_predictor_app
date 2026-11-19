@@ -6,13 +6,12 @@ services:
       context: .
       dockerfile: Dockerfile
     image: aqi-predictor:local
-    container_name: aqi-predictor
+    container_name: aqi-predictor-api
     ports:
       - "8000:8000"
     environment:
       - MODEL_PATH=/app/aqi_pipeline.pkl
     volumes:
-      # Hot-reload the model without rebuilding the image
       - ./aqi_pipeline.pkl:/app/aqi_pipeline.pkl:ro
     restart: unless-stopped
     healthcheck:
@@ -22,3 +21,18 @@ services:
       timeout: 10s
       retries: 3
       start_period: 15s
+
+  aqi-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: aqi-predictor:local
+    container_name: aqi-predictor-dashboard
+    command: ["streamlit", "run", "dashboard.py", "--server.port=8501", "--server.address=0.0.0.0"]
+    ports:
+      - "8501:8501"
+    environment:
+      - MODEL_PATH=/app/aqi_pipeline.pkl
+    volumes:
+      - ./aqi_pipeline.pkl:/app/aqi_pipeline.pkl:ro
+    restart: unless-stopped

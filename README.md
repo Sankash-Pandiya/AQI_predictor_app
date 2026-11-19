@@ -12,16 +12,18 @@ with **Docker**, and deployed automatically through **GitHub Actions → GHCR**.
 AQI_predictor/
 ├── app/
 │   ├── __init__.py
-│   └── predictor.py          # FastAPI app + inference logic
+│   ├── predictor.py          # FastAPI app + inference logic
+│   └── transformers.py       # Winsorizer & custom transformers
 ├── tests/
 │   ├── __init__.py
 │   └── test_predictor.py     # pytest unit + integration tests
 ├── .github/
 │   └── workflows/
 │       └── ci_cd.yml         # GitHub Actions CI/CD pipeline
+├── dashboard.py              # Streamlit Interactive Dashboard
 ├── aqi_pipeline.pkl          # Trained sklearn pipeline (joblib)
 ├── Dockerfile                # Multi-stage Docker build
-├── docker-compose.yml        # Local dev / quick-run
+├── docker-compose.yml        # Local dev (API + Dashboard)
 ├── requirements.txt          # Runtime dependencies
 ├── pyproject.toml            # Ruff + pytest config
 ├── .dockerignore
@@ -43,7 +45,20 @@ AQI_predictor/
 source venv/bin/activate
 ```
 
-### 2 — Run the API
+### 2 — Run the Streamlit Dashboard (Showcase)
+
+```bash
+streamlit run dashboard.py
+```
+
+Then open <http://localhost:8501> to interact with the dashboard:
+- 🔮 **Real-Time Forecasting**: Dynamic gauge, safety categories, and health advisories
+- 🕹️ **Presets**: Instant testing for Delhi Smog, Bengaluru Urban, Chennai Breeze, etc.
+- 🧪 **Pollutant Diagnostics**: Benchmark concentrations against India NAAQS standards
+- ⚡ **What-If Simulation**: Test policy impact (e.g. 30% PM reduction) on next-day AQI
+- 🧠 **Architecture & Metrics**: Pipeline walkthrough and benchmark metrics
+
+### 3 — Run the FastAPI Inference API
 
 ```bash
 uvicorn app.predictor:app --reload --port 8000
@@ -51,7 +66,7 @@ uvicorn app.predictor:app --reload --port 8000
 
 Then open <http://localhost:8000/docs> for the interactive Swagger UI.
 
-### 3 — Run tests
+### 4 — Run tests
 
 ```bash
 pytest tests/ -v

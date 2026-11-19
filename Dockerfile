@@ -21,16 +21,17 @@ RUN pip install --no-cache-dir --upgrade pip \
 # ── Final image ─────────────────────────────────────────────────────────────
 FROM deps AS final
 
-# Copy app source and model
+# Copy app source, dashboard, and model
 COPY app/            ./app/
+COPY dashboard.py    .
 COPY aqi_pipeline.pkl .
 
 # Ownership to non-root user
 RUN chown -R appuser:appgroup /app
 USER appuser
 
-# Expose FastAPI port
-EXPOSE 8000
+# Expose FastAPI (8000) and Streamlit (8501) ports
+EXPOSE 8000 8501
 
 # Health-check: hit /health every 30 s
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \

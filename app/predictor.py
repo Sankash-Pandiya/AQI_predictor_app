@@ -9,6 +9,7 @@ Loads the trained sklearn pipeline (aqi_pipeline.pkl) and exposes:
 from __future__ import annotations
 
 import os
+import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -17,6 +18,11 @@ import numpy as np
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
+
+from app.transformers import Winsorizer
+
+# Ensure Winsorizer resolves if loaded from a pickled __main__ scope
+sys.modules["__main__"].Winsorizer = Winsorizer
 
 # ---------------------------------------------------------------------------
 # Model setup
