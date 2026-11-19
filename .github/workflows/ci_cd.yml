@@ -1,0 +1,145 @@
+# GitHub Actions CI/CD — AQI Predictor
+# ──────────────────────────────────────────────────────────────────────────
+# Triggers:
+#   • push to main/master           → test → build → push to GHCR
+#   • pull_request to main/master   → test only (no push)
+#   • manual dispatch               → full run with optional tag override
+#
+# Secrets required (Settings → Secrets → Actions):
+#   None — uses built-in GITHUB_TOKEN for GHCR authentication.
+#
+# Image published to:
+#   ghcr.io/<owner>/<repo>:latest
+#   ghcr.io/<owner>/<repo>:<sha-short>
+# ──────────────────────────────────────────────────────────────────────────
+
+name: CI/CD — Build & Push Docker Image
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - "*.md"
+      - "*.ipynb"
+      - ".gitignore"
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Extra image tag (e.g. v1.2.3)"
+        required: false
+        default: ""
+
+# Cancel in-progress runs for the same branch (saves CI minutes)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}   # owner/repo → lowercase later
+
+jobs:
+  # ─────────────────────────────────────────────
+  # JOB 1 — Lint & Test
+  # ─────────────────────────────────────────────
+  test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov ruff
+
+      - name: Lint with ruff
+        run: ruff check app/ tests/
+
+      - name: Run tests with coverage
+        run: |
+          pytest tests/ -v --tb=short \
+            --cov=app --cov-report=term-missing \
+            --cov-report=xml:coverage.xml
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+  # ─────────────────────────────────────────────
+  # JOB 2 — Build & Push Docker image
+  # Only runs on push to main/master or manual trigger
+  # ─────────────────────────────────────────────
+  build-and-push:
+    name: Build & Push to GHCR
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name != 'pull_request'
+
+    permissions:
+      contents: read
+      packages: write     # required to push to GHCR
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Docker Buildx for multi-platform + layer caching
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Log in to GitHub Container Registry
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Derive image tags
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ github.event.inputs.image_tag }},enable=${{ github.event.inputs.image_tag != '' }}
+
+      # Build and push (uses GitHub Actions cache for layer caching)
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Image digest summary
+        run: |
+          echo "### Docker Image Published 🐳" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Registry:** \`${{ env.REGISTRY }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** \`${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

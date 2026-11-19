@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  aqi-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: aqi-predictor:local
+    container_name: aqi-predictor
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_PATH=/app/aqi_pipeline.pkl
+    volumes:
+      # Hot-reload the model without rebuilding the image
+      - ./aqi_pipeline.pkl:/app/aqi_pipeline.pkl:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s

@@ -1,0 +1,49 @@
+# AQI Predictor — project root .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+eggs/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Data & model artefacts — commit the .pkl only if it is small enough for Git LFS
+city_day.csv
+*.zip
+# aqi_pipeline.pkl   ← uncomment this line to exclude from git; use Git LFS instead
+
+# Testing & coverage
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+*.xml
+
+# Linting / type-checking caches
+.ruff_cache/
+.mypy_cache/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS artefacts
+.DS_Store
+Thumbs.db
