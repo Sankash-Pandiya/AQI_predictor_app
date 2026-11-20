@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parent.parent
 MODEL_PATH = ROOT / "aqi_pipeline.pkl"
 CANDIDATE_PATH = ROOT / "candidate_pipeline.pkl"
 
-NEW_DATA_PATH = ROOT / "data" / "aqi_dataset_top_3_indian_cities_50.csv"
+NEW_DATA_PATH = ROOT / "data" / "new_aqi_data.csv"
 
 HOLDOUT_PATH = ROOT / "monitoring" / "quality_gate_holdout.csv"
 REPORT_PATH = ROOT / "monitoring" / "candidate_training_report.json"

@@ -4,7 +4,8 @@ import json
 from pathlib import Path
 
 # File paths
-DATA_PATH = Path("data/aqi_dataset_top_3_indian_cities_50.csv")
+ROOT = Path(__file__).resolve().parent.parent
+DATA_PATH = ROOT / "data" / "new_aqi_data.csv"
 REPORT_PATH = Path("monitoring/data_validation_report.json")
 
 # Expected columns from our AQI dataset

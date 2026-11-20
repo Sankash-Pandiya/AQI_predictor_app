@@ -15,8 +15,8 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 ROOT = Path(__file__).resolve().parent.parent
 
 MODEL_PATH = ROOT / "aqi_pipeline.pkl"
-OLD_DATA_PATH = ROOT / "city_day.csv"
-NEW_DATA_PATH = ROOT / "data" / "aqi_dataset_top_3_indian_cities_50.csv"
+OLD_DATA_PATH = ROOT / "data" / "city_day.csv"
+NEW_DATA_PATH = ROOT / "data" / "new_aqi_data.csv"
 
 REPORT_PATH = ROOT / "monitoring" / "evaluation_report.json"
 PREDICTIONS_PATH = ROOT / "monitoring" / "evaluation_predictions.csv"

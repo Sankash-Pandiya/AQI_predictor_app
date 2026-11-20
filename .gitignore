@@ -23,7 +23,6 @@ ENV/
 *.ipynb
 
 # Data & model artefacts — commit the .pkl only if it is small enough for Git LFS
-city_day.csv
 *.zip
 # aqi_pipeline.pkl   ← uncomment this line to exclude from git; use Git LFS instead
 
